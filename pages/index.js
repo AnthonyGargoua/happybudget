@@ -7,19 +7,20 @@ import ExpenseList from '../components/ExpenseList';
 export default function Home() {
   const [persoExpenses, setPersoExpenses] = useState([]);
   const [sharedTotal, setSharedTotal] = useState(0);
-  
-  // Paramètres (tu pourras ajouter un bouton pour les modifier plus tard)
-  const income = 2500; 
-  const fixedCharges = 800; // Assurances, loyer, netflix...
+
+  // --- CONFIGURATION À MODIFIER ---
+  const income = 2500; // Ton salaire
+  const fixedCharges = 950; // Loyer, abonnements, assurances...
+  // --------------------------------
 
   const monthKey = `${new Date().getMonth() + 1}-${new Date().getFullYear()}`;
 
   useEffect(() => {
-    // Charger le perso
+    // 1. Charger les dépenses perso
     const savedPerso = localStorage.getItem(`perso-${monthKey}`);
     if (savedPerso) setPersoExpenses(JSON.parse(savedPerso));
 
-    // Charger le commun juste pour le calcul
+    // 2. Charger le total du commun pour le calcul global
     const savedShared = localStorage.getItem(`shared-${monthKey}`);
     if (savedShared) {
       const list = JSON.parse(savedShared);
@@ -34,11 +35,17 @@ export default function Home() {
     localStorage.setItem(`perso-${monthKey}`, JSON.stringify(updated));
   };
 
+  const deletePersoExpense = (id) => {
+    const updated = persoExpenses.filter(exp => exp.id !== id);
+    setPersoExpenses(updated);
+    localStorage.setItem(`perso-${monthKey}`, JSON.stringify(updated));
+  };
+
   const persoTotal = persoExpenses.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
     <Layout currentTab="perso">
-      {/* Le nouveau tableau récapitulatif */}
+      {/* Tableau de bord récapitulatif total */}
       <GlobalDashboard 
         income={income} 
         fixedCharges={fixedCharges} 
@@ -46,12 +53,18 @@ export default function Home() {
         sharedTotal={sharedTotal} 
       />
 
-      <div className="bg-pink-100/50 p-1 rounded-2xl mb-6">
-        <h3 className="text-center text-xs font-bold text-pink-600 py-1 uppercase italic">Ajouter une dépense perso</h3>
+      <div className="bg-pink-100/50 p-1 rounded-2xl mb-4">
+        <h3 className="text-center text-[10px] font-bold text-pink-600 py-1 uppercase italic tracking-widest">
+          Ajouter une dépense personnelle
+        </h3>
       </div>
       
       <ExpenseForm onAdd={addPersoExpense} />
-      <ExpenseList items={persoExpenses} title="Détails de mes achats 📝" />
+      <ExpenseList 
+        items={persoExpenses} 
+        title="Détails de mes achats 📝" 
+        onDelete={deletePersoExpense} 
+      />
     </Layout>
   );
 }
