@@ -7,11 +7,10 @@ import ExpenseList from '../components/ExpenseList';
 export default function Home() {
   const [persoExpenses, setPersoExpenses] = useState([]);
   const [sharedTotal, setSharedTotal] = useState(0);
-
-  // --- CONFIGURATION À MODIFIER ---
-  const income = 2500; // Ton salaire
-  const fixedCharges = 950; // Loyer, abonnements, assurances...
-  // --------------------------------
+  
+  // États pour le salaire et les charges fixes
+  const [income, setIncome] = useState(2500);
+  const [fixedCharges, setFixedCharges] = useState(950);
 
   const monthKey = `${new Date().getMonth() + 1}-${new Date().getFullYear()}`;
 
@@ -20,14 +19,31 @@ export default function Home() {
     const savedPerso = localStorage.getItem(`perso-${monthKey}`);
     if (savedPerso) setPersoExpenses(JSON.parse(savedPerso));
 
-    // 2. Charger le total du commun pour le calcul global
+    // 2. Charger le total du commun
     const savedShared = localStorage.getItem(`shared-${monthKey}`);
     if (savedShared) {
       const list = JSON.parse(savedShared);
-      const total = list.reduce((acc, curr) => acc + curr.amount, 0);
-      setSharedTotal(total);
+      setSharedTotal(list.reduce((acc, curr) => acc + curr.amount, 0));
     }
+
+    // 3. Charger le salaire et les charges sauvegardés
+    const savedIncome = localStorage.getItem('user-income');
+    const savedFixed = localStorage.getItem('user-fixed');
+    if (savedIncome) setIncome(parseFloat(savedIncome));
+    if (savedFixed) setFixedCharges(parseFloat(savedFixed));
   }, []);
+
+  // Sauvegarder le salaire/charges quand ils changent
+  const handleConfigChange = (type, value) => {
+    const numValue = value === '' ? 0 : parseFloat(value);
+    if (type === 'income') {
+      setIncome(numValue);
+      localStorage.setItem('user-income', numValue);
+    } else {
+      setFixedCharges(numValue);
+      localStorage.setItem('user-fixed', numValue);
+    }
+  };
 
   const addPersoExpense = (newExp) => {
     const updated = [newExp, ...persoExpenses];
@@ -41,30 +57,39 @@ export default function Home() {
     localStorage.setItem(`perso-${monthKey}`, JSON.stringify(updated));
   };
 
-  const persoTotal = persoExpenses.reduce((acc, curr) => acc + curr.amount, 0);
-
   return (
     <Layout currentTab="perso">
-      {/* Tableau de bord récapitulatif total */}
+      {/* Section réglages rapides */}
+      <div className="bg-white rounded-3xl p-4 shadow-sm mb-4 border border-gray-100 flex gap-4">
+        <div className="flex-1">
+          <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Salaire 💰</label>
+          <input 
+            type="number" 
+            value={income} 
+            onChange={(e) => handleConfigChange('income', e.target.value)}
+            className="w-full bg-gray-50 p-2 rounded-xl border-none font-bold text-green-600 focus:ring-2 focus:ring-green-400"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Fixe/Abo 🏠</label>
+          <input 
+            type="number" 
+            value={fixedCharges} 
+            onChange={(e) => handleConfigChange('fixed', e.target.value)}
+            className="w-full bg-gray-50 p-2 rounded-xl border-none font-bold text-red-500 focus:ring-2 focus:ring-red-400"
+          />
+        </div>
+      </div>
+
       <GlobalDashboard 
         income={income} 
         fixedCharges={fixedCharges} 
-        persoTotal={persoTotal} 
+        persoTotal={persoExpenses.reduce((acc, curr) => acc + curr.amount, 0)} 
         sharedTotal={sharedTotal} 
       />
 
-      <div className="bg-pink-100/50 p-1 rounded-2xl mb-4">
-        <h3 className="text-center text-[10px] font-bold text-pink-600 py-1 uppercase italic tracking-widest">
-          Ajouter une dépense personnelle
-        </h3>
-      </div>
-      
       <ExpenseForm onAdd={addPersoExpense} />
-      <ExpenseList 
-        items={persoExpenses} 
-        title="Détails de mes achats 📝" 
-        onDelete={deletePersoExpense} 
-      />
+      <ExpenseList items={persoExpenses} title="Mes achats 📝" onDelete={deletePersoExpense} />
     </Layout>
   );
 }
