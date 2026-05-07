@@ -11,7 +11,7 @@
   **Zéro tableur, zéro stress.** Une interface intuitive pour piloter votre vie financière sans avoir besoin d'un diplôme de comptabilité.
 </div>
 
-**Accéder au projet** https://vercel.com/anthonygargouas-projects
+**Accéder au projet** [https://vercel.com/anthonygargouas-projects](https://happybudget-theta.vercel.app/)
 
 ---
 
